@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script src="https://unpkg.com/vue@3"></script>
+	<!-- import Vue -->
+	<script src="{{ url_for('static', filename='homepage_signup.js') }}"></script> 
+	<!-- import axios-->
+	<script src="https://unpkg.com/axios@1.6.7/dist/axios.min.js"></script>
+
+	<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signup Modal Example</title>
+
+</head>
+<body>
+
+<div class="header">
+  <h1>Welcome to Our Website</h1>
+</div>
+
+<div class="search-container">
+  <input type="text" class="search-input" placeholder="Search...">
+  <button class="search-button">Search</button>
+  <button id="signup-btn" class="search-button">Signup</button>
+</div>
+
+<!-- The Modal -->
+<div id="signup-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Signup</h2>
+    <form>
+		<label for="fullname">全名：</label>
+		<input type="text" id="fullname" name="fullname" v-model = user.fullname required>
+		<br>
+		<label for="username">用户名:</label>
+		<input type="text" id="username" name="username" v-model = user.username required>
+		<br>
+		<label for="password">密码:</label>
+		<input type="password" id="password" name="password" v-model = user.password required>
+		<br>
+		<label for="retypepassword">再输一次密码:</label>
+		<input type="password" id="retypepassword" name="retypepassword" v-model = user.retypepassword required>
+		<br>
+		<label for="phoneNumber">电话号码:</label>
+		<input type="tel" id="phoneNumber" inputmode="numeric" name="phoneNumber" v-model = user.phoneNumber required>
+		<br>
+		<label for="verificationCode">验证码:</label>
+		<input type="tel" id="verificationCode" name="verificationCode" v-model = user.verificationCode required>
+		<br>
+		<button type="button" @click = "getVerificationCode">获得验证码</button>
+		<br>
+		<button type="button" @click = "finalSubmit">确认注册</button>
+		<br>
+
+
+    </form>
+  </div>
+</div>
+
+<script>
+	const app = Vue.createApp({
+        data() {
+            return {
+                user: {
+                    fullname: "",
+                    password: "",
+                    retypepassword: "",
+                    username: "",
+					phoneNumber: "",
+					verificationCode: "",
+                },
+                errorMsg: "",
+				verificationCodeSent: false, // 验证码
+            };
+        },
+        methods: {
+		    getVerificationCode(event) {
+                // 表单提交逻辑
+                event.preventDefault();
+
+				const data = {
+					fullname: this.user.fullname,
+					password: this.user.password,
+					retypepassword: this.user.retypepassword,
+					username: this.user.username,
+					phoneNumber: this.user.phoneNumber,
+					errorMsg: this.errorMsg
+				};
+				
+				// 检测必须要输入的地方是否都已填写
+				if (!this.user.fullname) {
+					this.errorMsg = "姓名不能为空";
+				}
+
+				else if (!this.user.username) {
+					this.errorMsg = "用户名不能为空";
+				}
+
+				else if (!this.user.password) {
+					this.errorMsg = "密码不能为空";
+				}
+
+				else if (!this.user.retypepassword) {
+					this.errorMsg = "再次输入密码不能为空";
+				}
+
+				else if (!this.user.phoneNumber) {
+					this.errorMsg = "电话号码不能为空";
+				}
+
+				else if(this.user.password != this.user.retypepassword) {
+					this.errorMsg = "两次输入的密码不同";
+				}
+
+				else if(this.user.phoneNumber.length != 13 || this.user.phoneNumber[0] != "1") { // 13位电话号码，且第一位是1
+					this.errorMsg = "电话号码输入不正确"
+				}
+
+				else {
+					this.errorMsg = "";
+				}
+				
+				if(this.errorMsg != "") // 输入有问题
+				{
+					console.log(this.errorMsg)
+					return; // 阻止提交
+				}
+				// 使用Axios发送POST请求
+				// 这里发送的是到本地的地址，localhost:5000
+				console.log("正在提交输入");
+				axios.post('http://localhost:5000', data)
+					.then(response => 
+					{
+						message = JSON.stringify(response.data).slice(1, -1)
+						//判断是否为Error
+						const messageParts = message.split(':"');
+
+						//判断用户的输入是否为error，或者success
+						messageType = message[0];
+						messageInfo = messageParts[1]; // 具体错误信息
+						console.log(messageInfo)
+						this.message = response.data.message;
+
+						if(messageType != "error")
+						{
+							
+							this.verificationCodeSent = true;
+						}
+
+						else
+						{
+							this.errorMsg = messageParts[1];
+							console.log(this.errorMsg);
+						}
+					}
+				)
+
+					.catch(error => 
+					{
+						// 请求失败，处理错误
+						console.error('Error sending data to backend:', error);
+					}
+				);
+            },
+
+			finalSubmit(event)
+			{
+				event.preventDefault();
+				if (!this.verificationCodeSent) {
+					this.message = "请先获取验证码";
+					return;
+      			}
+
+
+				const verifCode = {
+					verificationCode: this.user.verificationCode,
+				};
+
+				axios.post('http://localhost:5000/', verifCode)
+					.then(response => {
+						// 注册成功
+						this.message = "注册成功";
+					})
+					.catch(error => {
+						console.error('Error final submitting:', error);
+					});
+			}
+		}
+    });
+
+    // 挂载 Vue 应用到 '#app' 元素
+    app.mount('#signup-modal');
+
+</script>
+
+</body>
+</html>

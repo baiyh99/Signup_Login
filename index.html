@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://unpkg.com/@3/dist/vue.global.js"></script>
+	<script src="{{ url_for('static', filename='homepage_signup.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signup Modal Example</title>
+
+</head>
+<body>
+
+<div class="header">
+  <h1>Welcome to Our Website</h1>
+</div>
+
+<div class="search-container">
+  <input type="text" class="search-input" placeholder="Search...">
+  <button class="search-button">Search</button>
+  <button id="signup-btn" class="search-button">Signup</button>
+</div>
+
+<!-- The Modal -->
+<div id="signup-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Signup</h2>
+    <form method = "post">
+		<label for="fullname">全名：</label>
+		<input type="text" id="fullname" name="fullname" required>
+		<br>
+		<label for="username">用户名:</label>
+		<input type="text" id="username" name="username" required>
+		<br>
+		<label for="password">密码:</label>
+		<input type="password" id="password" name="password" required>
+		<br>
+		<label for="retypepassword">再输一次密码:</label>
+		<input type="password" id="retypepassword" name="retypepassword" required>
+		<br>
+		<button>Wechat</button>
+		<br>
+		<button>QQ</button>
+		<button type="submit">Submit</button>
+		<br>
+
+
+    </form>
+  </div>
+</div>
+
+
+</body>
+</html>
