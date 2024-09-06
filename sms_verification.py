@@ -12,7 +12,7 @@ from alibabacloud_tea_util import models as util_models
 from alibabacloud_tea_util.client import Client as UtilClient
 
 
-class Sample:
+class userRegister:
     def __init__(self):
         pass
 
@@ -27,24 +27,27 @@ class Sample:
         # 建议使用更安全的 STS 方式，更多鉴权访问方式请参见：https://help.aliyun.com/document_detail/378659.html。
         config = open_api_models.Config(
             # 必填，请确保代码运行环境设置了环境变量 ALIBABA_CLOUD_ACCESS_KEY_ID。,
+
+            #TODO: 加密access_key_id和access_key_secret
+
             access_key_id=os.environ['ALIBABA_CLOUD_ACCESS_KEY_ID'],
             # 必填，请确保代码运行环境设置了环境变量 ALIBABA_CLOUD_ACCESS_KEY_SECRET。,
             access_key_secret=os.environ['ALIBABA_CLOUD_ACCESS_KEY_SECRET']
         )
         # Endpoint 请参考 https://api.aliyun.com/product/Dysmsapi
-        config.endpoint = f'dysmsapi.aliyuncs.com'
+        config.endpoint = 'dysmsapi.aliyuncs.com'
         return Dysmsapi20170525Client(config)
 
     @staticmethod
     def main(
-        args: List[str],
+        input_sign_name, input_template_code, input_phone_number, input_template_param
     ) -> None:
-        client = Sample.create_client()
+        client = userRegister.create_client()
         send_sms_request = dysmsapi_20170525_models.SendSmsRequest(
-            sign_name='阿里云短信测试',
-            template_code='SMS_154950909',
-            phone_numbers='13606549323',
-            template_param='{"code":"1234"}'
+            sign_name=input_sign_name, #赵梓良的知予学习需求平台
+            template_code=input_template_code, #SMS_472020275
+            phone_numbers=input_phone_number, 
+            template_param=input_template_param #{"code":"629871}
         )
         runtime = util_models.RuntimeOptions()
         try:
@@ -60,9 +63,11 @@ class Sample:
 
     @staticmethod
     async def main_async(
-        args: List[str],
+        args: List[str]
     ) -> None:
-        client = Sample.create_client()
+        client = userRegister.create_client()
+
+        #TODO: Change the name and codes to user inputs
         send_sms_request = dysmsapi_20170525_models.SendSmsRequest(
             sign_name='阿里云短信测试',
             template_code='SMS_154950909',
@@ -83,4 +88,9 @@ class Sample:
 
 
 if __name__ == '__main__':
-    Sample.main(sys.argv[1:])
+    userRegister.main(sys.argv[1:])
+
+    # verficationCode=''.join([str(random.randint(0,9)) for _ in range(6)])
+    # verificationParam = '{"code":' + str(verficationCode) + '}'
+    # print(verificationParam)
+    # userRegister.main("赵梓良的知予学习需求平台", "SMS_303861141", "13606549323", verificationParam)
