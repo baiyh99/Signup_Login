@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://unpkg.com/vue@3"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>帖子展示</title>
+<style>
+  .post {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+  }
+  .post-meta {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+  }
+  .post-title {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 5px;
+  }
+  .post-content {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  .post-rating {
+    font-size: 16px;
+    color: #ff6600;
+  }
+</style>
+</head>
+<body>
+
+  <div id="app">
+    <div v-for="post in posts" :key="post.threadNum" class="post">
+      <div class="post-meta" v-text="'用户: ' + post.nickname"></div>
+      <div class="post-title" v-text="post.title"></div>
+      <div class="post-content">
+        <p v-text="post.abstract"></p>
+      <div class="post-meta" v-text="'教师简介: ' + post.teacherAbstract"></div>
+      <div class="post-content" v-text="post.teacherRating"></div>
+      </div>
+    </div>
+  </div>
+</body>
+  <script>
+    const post_Display = Vue.createApp({
+      data() {
+        return {
+          posts: []
+        }
+      },
+      created() {
+        fetch('/data?type=teacher_posts')  // 假设后端路由为 '/data'
+          .then(response => response.json())
+          .then(data => {
+            this.posts = data;  // 假设后端返回的数据是一个数组
+            console.log("Fetched data:", data);
+          })
+          .catch(error => console.error('Error:', error));
+      },
+      mounted() {
+      }
+    }).mount('#app');
+  </script>
+</html>
