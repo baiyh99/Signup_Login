@@ -23,13 +23,12 @@
   <input type="text" class="search-input" placeholder="Search...">
   <button class="search-button">Search</button>
   <button id="signup-btn" class="search-button">Signup</button>
-  <button id="login-btn" class="search-button">Login</button>
 </div>
 
 <!-- The Modal -->
-<div id="signup-modal" class="modal_signup">
+<div id="signup-modal" class="modal">
   <div class="modal-content">
-    <span class="signup_close">&times;</span>
+    <span class="close">&times;</span>
     <h2>Signup</h2>
     <form>
 		<label for="fullname">全名：</label>
@@ -50,9 +49,9 @@
 		<label for="verificationCode">验证码:</label>
 		<input type="tel" id="verificationCode" name="verificationCode" v-model = user.verificationCode required>
 		<br>
-		<button id = "signupGetVerification" type="button" @click = "getVerificationCode">获得验证码</button>
+		<button type="button" @click = "getVerificationCode">获得验证码</button>
 		<br>
-		<button id = "signupSubmit" type="button" @click = "finalSubmit" data-action="signupSubmit">确认注册</button>
+		<button type="button" @click = "finalSubmit">确认注册</button>
 		<br>
 
 
@@ -60,26 +59,8 @@
   </div>
 </div>
 
-<div id="login-modal" class="modal_login">
-	<div class="modal-content">
-	  <span class="login_close">&times;</span>
-	  <h2>Login</h2>
-	  <form>
-		  <label for="loginPhone">电话号码:</label>
-		  <input type="tel" id="loginPhone" name="loginPhone" v-model = user.loginPhone required>
-		  <label for="loginVerification">验证码:</label>
-		  <input type="tel" id="loginVerification" name="loginVerification" v-model = user.loginVerification required>
-		  <br>
-		  <button type="button" @click = "getLoginVerification" data-action="loginGetVerification">获得验证码</button>
-		  <br>
-		  <button type="button" @click = "submit_Login">确认注册</button>
-		  <br>
-	  </form>
-	</div>
-  </div>
-
 <script>
-	const signup = Vue.createApp({
+	const app = Vue.createApp({
         data() {
             return {
                 user: {
@@ -95,7 +76,7 @@
             };
         },
         methods: {
-		    async getVerificationCode(event) {
+		    getVerificationCode(event) {
                 // 表单提交逻辑
                 event.preventDefault();
 
@@ -133,8 +114,8 @@
 					this.errorMsg = "两次输入的密码不同";
 				}
 
-				else if(this.user.phoneNumber.length != 11 || this.user.phoneNumber[0] != "1") { // 13位电话号码，且第一位是1
-					this.errorMsg = "电话号码输入格式不正确"
+				else if(this.user.phoneNumber.length != 13 || this.user.phoneNumber[0] != "1") { // 13位电话号码，且第一位是1
+					this.errorMsg = "电话号码输入不正确"
 				}
 
 				else {
@@ -149,12 +130,7 @@
 				// 使用Axios发送POST请求
 				// 这里发送的是到本地的地址，localhost:5000
 				console.log("正在提交输入");
-
-				axios.post('http://localhost:5000', data, {
-					headers: {
-						'X-Action': 'signupVerification' // 自定义头部字段
-					}
-				})
+				axios.post('http://localhost:5000', data)
 					.then(response => 
 					{
 						message = JSON.stringify(response.data).slice(1, -1)
@@ -193,49 +169,19 @@
 			{
 				event.preventDefault();
 				if (!this.verificationCodeSent) {
-					this.message = "请先填写必要信息以获得验证码";
+					this.message = "请先获取验证码";
 					return;
       			}
 
-				
+
 				const verifCode = {
 					verificationCode: this.user.verificationCode,
 				};
 
-				console.log(verifCode);
-				const verificationData = {
-					phoneNumber: this.user.phoneNumber,
-					verification: this.user.verificationCode
-				}
-
-				console.log(verificationData);
-				axios.post('http://localhost:5000/', verificationData, {
-					headers: {
-						'X-Action': 'signupSubmit' // 自定义头部字段
-					}
-				})
+				axios.post('http://localhost:5000/', verifCode)
 					.then(response => {
-						message = JSON.stringify(response.data).slice(1, -1)
-						//判断是否为Error
-						const messageParts = message.split(':"');
-
-						//判断用户的输入是否为error，或者success
-						messageType = message[0];
-						messageInfo = messageParts[1]; // 具体错误信息
-						console.log(messageInfo)
-						this.message = response.data.message;
 						// 注册成功
-
-						if(message != "error")
-						{
-							this.message = "注册成功";
-						}
-
-						else
-						{
-							this.message = "验证码输入不正确";
-						}
-						
+						this.message = "注册成功";
 					})
 					.catch(error => {
 						console.error('Error final submitting:', error);
@@ -245,146 +191,7 @@
     });
 
     // 挂载 Vue 应用到 '#app' 元素
-    signup.mount('#signup-modal');
-
-
-	const login = Vue.createApp({
-		data() {
-            return {
-                user: {
-					phoneNumber: "",
-					verificationCode: "",
-                },
-                errorMsg: "",
-				LoginVerificationCodeSent: false, // 验证码
-            };
-        },
-        methods: {
-		    async getVerificationCode(event) {
-                // 表单提交逻辑
-                event.preventDefault();
-
-				const data = {
-					phoneNumber: this.user.phoneNumber,
-					errorMsg: this.errorMsg
-				};
-				
-				if (!this.user.phoneNumber) {
-					this.errorMsg = "电话号码不能为空";
-				}
-
-				else if(this.user.phoneNumber.length != 11 || this.user.phoneNumber[0] != "1") { // 13位电话号码，且第一位是1
-					this.errorMsg = "电话号码输入格式不正确"
-				}
-
-				else {
-					this.errorMsg = "";
-				}
-				
-				if(this.errorMsg != "") // 输入有问题
-				{
-					console.log(this.errorMsg)
-					return; // 阻止提交
-				}
-				// 使用Axios发送POST请求
-				// 这里发送的是到本地的地址，localhost:5000
-				console.log("正在提交输入");
-
-				axios.post('http://localhost:5000', data, {
-					headers: {
-						'X-Action': 'loginVerification' // 自定义头部字段
-					}
-				})
-					.then(response => 
-					{
-						message = JSON.stringify(response.data).slice(1, -1)
-						//判断是否为Error
-						const messageParts = message.split(':"');
-
-						//判断用户的输入是否为error，或者success
-						messageType = message[0];
-						messageInfo = messageParts[1]; // 具体错误信息
-						console.log(messageInfo)
-						this.message = response.data.message;
-
-						if(messageType != "error")
-						{
-							
-							this.LoginVerificationCodeSent = true;
-						}
-
-						else
-						{
-							this.errorMsg = messageParts[1];
-							console.log(this.errorMsg);
-						}
-					}
-				)
-
-					.catch(error => 
-					{
-						// 请求失败，处理错误
-						console.error('Error sending data to backend:', error);
-					}
-				);
-            },
-
-			finalSubmit(event)
-			{
-				event.preventDefault();
-				if (!this.LoginVerificationCodeSent) {
-					this.message = "请先填写必要信息以获得验证码";
-					return;
-      			}
-
-				
-				const verifCode = {
-					verificationCode: this.user.verificationCode,
-				};
-
-				console.log(verifCode);
-				const verificationData = {
-					phoneNumber: this.user.phoneNumber,
-					verification: this.user.verificationCode
-				}
-
-				console.log(verificationData);
-				axios.post('http://localhost:5000/', verificationData, {
-					headers: {
-						'X-Action': 'loginSubmit' // 自定义头部字段
-					}
-				})
-					.then(response => {
-						message = JSON.stringify(response.data).slice(1, -1)
-						//判断是否为Error
-						const messageParts = message.split(':"');
-
-						//判断用户的输入是否为error，或者success
-						messageType = message[0];
-						messageInfo = messageParts[1]; // 具体错误信息
-						console.log(messageInfo)
-						this.message = response.data.message;
-						// 注册成功
-
-						if(message != "error")
-						{
-							this.message = "注册成功";
-						}
-
-						else
-						{
-							this.message = "验证码输入不正确";
-						}
-						
-					})
-					.catch(error => {
-						console.error('Error final submitting:', error);
-					});
-			}
-		}
-	})
-
-	login.mount('#login-modal')
+    app.mount('#signup-modal');
 
 </script>
 
