@@ -6,10 +6,38 @@ from users import userInfo
 import os, random
 from sms_verification import userRegister
 import time
+import pytz
 
 verificaiton_getTime = 0
 verificationCode = ''
 verifPhone = 0
+
+
+def translateTimetoBeijing(utc_time):
+    beijing_tz = pytz.timezone('Asia/Shanghai')
+    beijing_time = utc_time.astimezone(beijing_tz)
+    return beijing_time.replace(tzinfo=None)
+
+def formatTimeStamp(postingTime):
+        now = translateTimetoBeijing(datetime.now(pytz.utc))
+        print(postingTime, now)
+        time_diff = now - postingTime
+        print(time_diff)
+        if time_diff < timedelta(minutes=1):
+            # 如果帖子发布时间在一分钟以内，显示“刚刚发布”
+            return "刚刚发布"
+        elif time_diff < timedelta(hours=1):
+            # 如果帖子发布时间在1小时以内，显示几分钟之前
+            minutes_ago = int(time_diff.total_seconds() / 60)
+            return f"{minutes_ago}分钟前"
+        elif time_diff < timedelta(days=1):
+            # 如果帖子发布时间在1天以内，显示几小时之前
+            hours_ago = int(time_diff.total_seconds() / 3600)
+            return f"{hours_ago}小时前"
+        else:
+            # 否则，直接显示日期
+            return postingTime.strftime('%Y年%m月%日 %时')
+
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 # SQL setup 之后需要再修改SQL地址
@@ -20,9 +48,17 @@ db.init_app(app)
 CORS(app)
 app.secret_key = 'super secret key'
 
-STUDENT_POST_START_ID = 10000
 
-
+def getMostRecentPostID(modelName):
+    with app.app_context():
+        # 查询最后一条记录的ID
+        last_id = modelName.query.order_by(modelName.threadNum.desc()).first()
+        if last_id:
+            next_id = last_id.threadNum + 1
+        else:
+            next_id = 1000  # 如果表为空，则从1开始
+        return next_id
+    
 class user_register(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fullname = db.Column(db.String(80), nullable=False)
@@ -44,7 +80,7 @@ class teacher_posts(db.Model):
     threadNum = db.Column(db.Integer, nullable = False, primary_key=True, unique = True)
     teacherAbstract = db.Column(db.String(200), nullable = False)
     teacherRating = db.Column(db.Double, nullable=False)
-    postingTime = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
+    postingTime = db.Column(db.DateTime, nullable=False, default=translateTimetoBeijing(datetime.now(pytz.utc)))
     
 
     def __repr__(self):
@@ -58,31 +94,11 @@ class teacher_posts(db.Model):
             'threadNum': self.threadNum,
             'teacherAbstract': self.teacherAbstract,
             'rating': f"{self.teacherRating:.1f}",
-            'postingTime': self.formatTimeStamp(self.postingTime)
+            'postingTime': formatTimeStamp(self.postingTime)
         }
 
         post_dict['type'] = "teacher_posts"
         return post_dict
-    @staticmethod
-    def formatTimeStamp(postingTime):
-        now = datetime.utcnow()
-        print(postingTime, now)
-        time_diff = now - postingTime
-
-        if time_diff < timedelta(minutes=1):
-            # 如果帖子发布时间在一分钟以内，显示“刚刚发布”
-            return "刚刚发布"
-        elif time_diff < timedelta(hours=1):
-            # 如果帖子发布时间在1小时以内，显示几分钟之前
-            minutes_ago = int(time_diff.total_seconds() / 60)
-            return f"{minutes_ago}分钟前"
-        elif time_diff < timedelta(days=1):
-            # 如果帖子发布时间在1天以内，显示几小时之前
-            hours_ago = int(time_diff.total_seconds() / 3600)
-            return f"{hours_ago}小时前"
-        else:
-            # 否则，直接显示日期
-            return postingTime.strftime('%Y年%m月%日 %时')
     
 
 class student_posts(db.Model):
@@ -92,7 +108,7 @@ class student_posts(db.Model):
     abstract = db.Column(db.String(80), nullable=False)
     threadNum = db.Column(db.Integer, nullable = False, primary_key=True, unique = True, autoincrement = True)
     isTeacher = db.Column(db.Boolean, nullable = False)
-    postingTime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    postingTime = db.Column(db.DateTime, nullable=False, default=translateTimetoBeijing(datetime.now(pytz.utc)))
 
 
     def to_dict(self):
@@ -103,33 +119,16 @@ class student_posts(db.Model):
             'abstract': self.abstract,
             'threadNum': self.threadNum,
             'isTeacher': self.isTeacher,
-            'postingTime': self.formatTimeStamp(self.postingTime)
+            'postingTime': formatTimeStamp(self.postingTime)
         }
 
         post_dict['type'] = "student_posts"
         return post_dict
     
-    @staticmethod
-    def formatTimeStamp(postingTime):
-        now = datetime.utcnow()
-        time_diff = now - postingTime
 
-        if time_diff < timedelta(minutes=1):
-            # 如果帖子发布时间在一分钟以内，显示“刚刚发布”
-            return "刚刚发布"
-        elif time_diff < timedelta(hours=1):
-            # 如果帖子发布时间在1小时以内，显示几分钟之前
-            minutes_ago = int(time_diff.total_seconds() / 60)
-            return f"{minutes_ago}分钟前"
-        elif time_diff < timedelta(days=1):
-            # 如果帖子发布时间在1天以内，显示几小时之前
-            hours_ago = int(time_diff.total_seconds() / 3600)
-            return f"{hours_ago}小时前"
-        else:
-            # 否则，直接显示日期
-            return postingTime.strftime('%Y年%m月%日 %时')
-    
 
+
+#------------------------------------------------------------
 # shell里输入flask recreate重置用户注册信息数据表
 @app.cli.command('recreate')
 def create():
@@ -326,29 +325,25 @@ def index():
     return render_template('index.html')
 
 
-def add_teacher_post(id, nickname, title, abstract, thread_num, teacherAbstract, teacherRating):
-    new_post = teacher_posts(posterId = id, nickName=nickname, title=title, abstract=abstract, threadNum=thread_num, teacherAbstract=teacherAbstract, teacherRating=teacherRating)
+def add_teacher_post(id, nickname, title, abstract, teacherAbstract, teacherRating):
+    new_post = teacher_posts(posterId = id, nickName=nickname, title=title, abstract=abstract, threadNum=getMostRecentPostID(teacher_posts), teacherAbstract=teacherAbstract, teacherRating=teacherRating)
     db.session.add(new_post)
     db.session.commit()
     return new_post
 
 def add_student_post(id, nickname, title, abstract, isTeacher):
-    if student_posts.query.first() is None:
-        new_post = student_posts(posterId=id, nickName=nickname, title=title, abstract=abstract, threadNum=10001, isTeacher=isTeacher)
-    else:
-        new_post = student_posts(posterId=id, nickName=nickname, title=title, abstract=abstract, isTeacher=isTeacher)
-
+    new_post = student_posts(posterId=id, nickName=nickname, title=title, abstract=abstract, threadNum=getMostRecentPostID(student_posts), isTeacher=isTeacher)
     db.session.add(new_post)
     db.session.commit()
     return new_post
 
 @app.route("/search_results1", methods = ["GET", "POST"])
 def TeacherSearchReturn():
-    # add_teacher_post(1001, "Richard", "Piano", "Welcome to this platform", 10001, "Level 10 Pianist", 4.24)
-    # add_teacher_post(1002, "Richard", "English", "Testing abstract", 10002, "Native English Speaker",3.00)
-    # add_teacher_post(1003, "Richard", "Spanish", "Teachers are welcome to register to this platform", 10003, "Graduated Spanish Master", 4.25)
-    # add_teacher_post(1004, "Richard", "Gaming", "Follow this guide to learn how to use this platform", 10004,  "Previous pro player", 4.88)
-    # add_teacher_post(1005, "Richard", "TikTok Management", "Looking for teachers for specific subjects", 10005, "100k followers on TikTok", 2.21)
+    add_teacher_post(1001, "Richard", "Piano", "Welcome to this platform", "Level 10 Pianist", 4.24)
+    add_teacher_post(1002, "Richard", "English", "Testing abstract", "Native English Speaker",3.00)
+    add_teacher_post(1003, "Richard", "Spanish", "Teachers are welcome to register to this platform", "Graduated Spanish Master", 4.25)
+    add_teacher_post(1004, "Richard", "Gaming", "Follow this guide to learn how to use this platform",  "Previous pro player", 4.88)
+    add_teacher_post(1005, "Richard", "TikTok Management", "Looking for teachers for specific subjects", "100k followers on TikTok", 2.21)
     
     return render_template('teacher_posts.html')
 
