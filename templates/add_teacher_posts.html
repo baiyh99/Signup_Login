@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://unpkg.com/vue@3"></script>
+    <script src="https://unpkg.com/axios@1.6.7/dist/axios.min.js"></script>
+    <style>
+        body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #f9f9f9;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    form {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+        font-weight: bold;
+        margin-bottom: 8px;
+        display: inline-block;
+    }
+
+    input, textarea {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+
+    input[type="text"] {
+        /* Make the title input longer */
+        height: 40px;
+    }
+
+    textarea {
+        /* Make the text area bigger */
+        height: 150px;
+        resize: vertical; /* Allows vertical resizing */
+    }
+
+    button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    button:hover {
+        background-color: #45a049;
+    }
+
+    .submitted-post {
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #e8f5e9;
+        border: 1px solid #4caf50;
+        border-radius: 4px;
+    }
+    </style>
+    
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create a Post</title>
+</head>
+<body>
+
+<div class="header">
+    <h1>Create a New Post</h1>
+</div>
+
+<!-- Post Creation Form -->
+<div id="app">
+    <form @submit.prevent="submitPost">
+        <div>
+            <label for="title">Title:</label>
+            <input type="text" id="title" v-model="post.title" required>
+        </div>
+
+        <div>
+            <label for="content">Content:</label>
+            <textarea id="content" v-model="post.content" required></textarea>
+        </div>
+
+        <button type="submit">Submit Post</button>
+    </form>
+
+
+    <!-- Error Message -->
+    <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
+</div>
+
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                post: {
+                    title: '',
+                    content: ''
+                },
+                submitted: false,
+                errorMsg: ''
+            };
+        },
+        methods: {
+            async submitPost() {
+                // Validate that both fields are filled
+                if (!this.post.title || !this.post.content) {
+                    this.errorMsg = 'Both title and content are required.';
+                    return;
+                }
+
+                // Clear error message if everything is correct
+                this.errorMsg = '';
+
+                // Prepare the post data to send to the backend
+                const postData = {
+                    title: this.post.title,
+                    content: this.post.content
+                };
+
+                // Example of submitting the data using Axios (replace URL with your server endpoint)
+                try {
+                    const response = await axios.post('http://localhost:5000/create-post', postData);
+                    console.log(response.data);
+                    
+                    // Assuming the response contains success information
+                    this.submitted = true;
+                } catch (error) {
+                    console.error('Error submitting the post:', error);
+                    this.errorMsg = 'An error occurred while submitting your post.';
+                }
+            }
+        }
+    }).mount('#app');
+</script>
+
+</body>
+</html>

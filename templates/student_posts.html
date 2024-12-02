@@ -55,7 +55,7 @@
         }
       },
       created() {
-        fetch('/data?type=student_posts')  // 假设后端路由为 '/data'
+        fetch('/search_results0/data?type=student_posts')  // 假设后端路由为 '/data'
           .then(response => response.json())
           .then(data => {
             this.posts = data;  // 假设后端返回的数据是一个数组
