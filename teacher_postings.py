@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, jsonify, json, session
 from models import teacher_posts, db, translateTimetoBeijing, formatTimeStamp
 import pytz
 from datetime import datetime, timedelta, timezone
+from assistMethods import add_teacher_post
 
 
 teacher_postings = Blueprint('search_results1', __name__)
@@ -26,29 +27,18 @@ def formatTimeStamp(postingTime):
         else:
             # 否则，直接显示日期
             return postingTime.strftime('%Y年%m月%日 %时')
-        
-def getMostRecentPostID():
-    last_id = teacher_posts.query.order_by(teacher_posts.threadNum.desc()).first()
-    if last_id:
-        return last_id.threadNum + 1
-    else:
-        return 1000  # 如果表为空，则从1开始
-    
+            
 
-def add_teacher_post(id, nickname, title, abstract, teacherAbstract, teacherRating):
-    new_post = teacher_posts(posterId = id, nickName=nickname, title=title, abstract=abstract, threadNum=getMostRecentPostID(), teacherAbstract=teacherAbstract, teacherRating=teacherRating)
-    db.session.add(new_post)
-    db.session.commit()
-    return new_post
+
 
 
 @teacher_postings.route("/", methods = ["GET", "POST"])
 def TeacherSearchReturn():
-    add_teacher_post(1001, "Richard", "Piano", "Welcome to this platform", "Level 10 Pianist", 4.24)
-    add_teacher_post(1002, "Richard", "English", "Testing abstract", "Native English Speaker",3.00)
-    add_teacher_post(1003, "Richard", "Spanish", "Teachers are welcome to register to this platform", "Graduated Spanish Master", 4.25)
-    add_teacher_post(1004, "Richard", "Gaming", "Follow this guide to learn how to use this platform",  "Previous pro player", 4.88)
-    add_teacher_post(1005, "Richard", "TikTok Management", "Looking for teachers for specific subjects", "100k followers on TikTok", 2.21)
+#     add_teacher_post(1001, "Richard", "Piano", "Welcome to this platform", "Level 10 Pianist", 4.24)
+#     add_teacher_post(1002, "Richard", "English", "Testing abstract", "Native English Speaker",3.00)
+#     add_teacher_post(1003, "Richard", "Spanish", "Teachers are welcome to register to this platform", "Graduated Spanish Master", 4.25)
+#     add_teacher_post(1004, "Richard", "Gaming", "Follow this guide to learn how to use this platform",  "Previous pro player", 4.88)
+#     add_teacher_post(1005, "Richard", "TikTok Management", "Looking for teachers for specific subjects", "100k followers on TikTok", 2.21)
     
     return render_template('teacher_posts.html')
 

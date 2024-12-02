@@ -3,18 +3,16 @@ from models import db, teacher_posts, student_posts, user_register
 
 from extension import db, cors
 from flask_cors import CORS
-from users import userInfo
+# from users import userInfo
 from indexPage import indexpage
 from teacher_postings import teacher_postings
 from student_postings import student_postings
 from add_teacher_posts import add_teacher_posts
-from models import db
+from add_student_posts import add_student_posts
 
 
 
-verificaiton_getTime = 0
-verificationCode = ''
-verifPhone = 0
+
 
 def createApp():
     app = Flask(__name__, template_folder="templates", static_folder="static")
@@ -30,12 +28,13 @@ def createApp():
     app.register_blueprint(teacher_postings, url_prefix='/search_results1')
     app.register_blueprint(student_postings, url_prefix='/search_results0')
     app.register_blueprint(add_teacher_posts, url_prefix='/add_post1')
+    app.register_blueprint(add_student_posts, url_prefix='/add_post0')
     return app
 
 app = createApp()
 
 
-    
+            
 # class user_register(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
 #     fullname = db.Column(db.String(80), nullable=False)

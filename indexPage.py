@@ -5,6 +5,7 @@ import random
 from sms_verification import userRegister
 from users import userInfo
 import time
+from assistMethods import logged_in_phone
 
 
 indexpage = Blueprint('indexpage', __name__)
@@ -13,12 +14,15 @@ verificaiton_getTime = 0
 verificationCode = ''
 verifPhone = 0
 
+
+
 @indexpage.route("/", methods=["GET", "POST"])
 def index():
     new_user = None
     global verificaiton_getTime
     global verificationCode
     global verifPhone
+    global logged_in_phone
     
     if request.method == "GET":
         return render_template('index.html')
@@ -116,13 +120,17 @@ def index():
                     db.session.commit()
                     
                 except Exception as e:
-                    app.logger.error(f"Error adding new user: {e}")
+                    indexpage.logger.error(f"Error adding new user: {e}")
                     db.session.rollback()
                     return jsonify({"error": "Error adding new user", "details": str(e)})
 
                 verificationCode = ''
                 verificaiton_getTime = ''
                 verifPhone = 0
+
+                #更新用于之后addPost用
+                logged_in_phone = new_user.phone
+
                 return jsonify({"message": "注册成功"})
                 
             else:
@@ -144,7 +152,7 @@ def index():
                 print(f"Stored verification code: {session['verification_code']}")
 
                 verificationParam = '{"code":' + '"' + str(verificationCode) + '"}'
-                validation_code_json=userRegister.main("赵梓良的知予学习需求平台", "SMS_303861141", verificationCode, verificationParam)
+                validation_code_json=userRegister.main("赵梓良的知予学习需求平台", "SMS_303861141", loginPhoneNum, verificationParam)
                 
                 #更新验证的电话号码和获得时间
                 verifPhone = loginPhoneNum
@@ -172,10 +180,14 @@ def index():
 
             print("Test", userInputVerifGroup)
             if(userInputVerif == verificationCode):
+                logged_in_phone = userInputVerifGroup.get("loginPhone")
                 verificaiton_getTime = 0
                 verificationCode = ''
                 verifPhone = 0
 
+                #更新用户登录号码， 用于addPost
+                
+                
                 return jsonify({"message": "登录成功"})
             
                 

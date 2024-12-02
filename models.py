@@ -1,7 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 import pytz
 from datetime import datetime, timedelta
-db = SQLAlchemy()
+from extension import db
+# db = SQLAlchemy()
 
 
 def formatTimeStamp(postingTime):
