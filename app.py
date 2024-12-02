@@ -17,7 +17,7 @@ from add_student_posts import add_student_posts
 def createApp():
     app = Flask(__name__, template_folder="templates", static_folder="static")
     # SQL setup 之后需要再修改SQL地址
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Jbsd93233%@localhost/UserInfo'
+    app.config['SQLALCHEMY_DATABASE_URI'] = #Add your own MySQL info here   'mysql+pymysql://root:Password@localhost/ModelName'
     sqlEngine = app.config['SQLALCHEMY_DATABASE_URI']
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
