@@ -1,6 +1,6 @@
 from models import db, user_register, teacher_posts, student_posts
 
-logged_in_phone = 13606549323
+logged_in_phone = 0
 
 
 def getUserInfo(phoneNum):
